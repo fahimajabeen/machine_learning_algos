@@ -1,0 +1,32 @@
+import numpy as np
+cimport numpy as np
+cimport cython
+
+
+cpdef quicksort(long [:] a, long low, long high):
+	cdef long p
+	if low < high:
+		p = partition(a, low, high)
+		quicksort(a, low, p-1)
+		quicksort(a, p+1, p+1)
+
+cpdef partition(long [:] a, long low, long high):
+	cdef long pivot = a[high-1]
+	cdef long i = low-1
+	cdef long j, tmp
+	for j in range(low, high):
+		if a[j]<= pivot:
+			i += 1
+			a[i], a[j] = a[j], a[i]
+		a[i+1], a[high] = a[high], a[i+1]
+	return i+1
+
+
+cpdef unique(long [:] input_arr, long [:] output_arr):
+	#returns a sorted set of input array
+	#returns an index array of position to the sorted set
+	
+	cdef Py_ssize_t i, j = 0
+
+
+print "hello world"

@@ -24,13 +24,16 @@ def test_CS_2():
 #TODO make sure this works
 def test_CS_3():
 	X = np.arange(20*5).reshape(20, 5).astype(float)
-	X[:,2] = X[:,2] % 5
+	X[:,0] = X[:,0] % 4
 	Y = np.arange(20) % 4
-	ys, yl, lys, lyl = cs.split_by_attribute(X[:,2], Y, 2)
-	print X
-	print len(Y), Y
-	print len(ys), lys, ys
-	print len(yl), lyl, yl
+	ys, yl, lys, lyl = cs.split_by_attribute(X[:,0], Y, 2)
+	for small in ys:
+		assert small in [0,1,2], "test CS 3 doesn't work"
+	for large in yl:
+		assert large==3, "test CS 3 doesn't work"
+	assert len(Y)==20
+	assert len(ys)==lys==15, "test CS 3 doesn't work"
+	assert len(yl)==lyl==5, "test CS 3 doesn't work"
 
 
 if __name__=="__main__":

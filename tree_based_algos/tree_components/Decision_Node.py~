@@ -29,3 +29,13 @@ class DecisionNode:
 		if example[self.attribute] <= self.separation_value:
 			return self.lc.classify(example)
 		return self.rc.classify(example)
+
+	def print_me(self, name=""):
+		#if self==None:
+		#	print "I'mNone"
+		if self.node_class==None:
+			if self.lc==None or self.rc==None: return # random subset creates occasional dead nodes
+			self.lc.print_me(name+"l")
+			self.rc.print_me(name+"r")
+		else:
+			print name, self.node_class

@@ -6,7 +6,7 @@ import numpy as np
 
 class AttributeSelector:
 	def __init__(self, attribute_selection_type="standard decision tree"):
-		switcher = {"standard decision tree": decision_tree_selection, "subset decision": subset_selection, "extremely random": extremely_random_selection, "random embedding": random_embedding}
+		switcher = {"standard decision tree": decision_tree_selection, "subset decision": subset_selection_log2, "extremely random": extremely_random_selection, "random embedding": random_embedding}
 		assert attribute_selection_type in switcher.keys(), "attribute selection type invalid"
 		self.attr_sel = switcher[attribute_selection_type]
 		self.attribute_selection_type = attribute_selection_type
@@ -49,12 +49,12 @@ def decision_tree_selection(X, Y):
 	return best_attr_idx, best_attr_val, best_info_gain
 
 
-#TODO this function when called many times throughs a value error
-def subset_selection(X, Y, subset_size=np.log2):
+
+def subset_selection_log2(X, Y):
 	nr_examples, nr_attributes = X.shape[0], X.shape[1]
 	attribute_information_gains = np.zeros(nr_attributes)
 	attribute_values = np.zeros(nr_attributes)
-	rand_subset = np.random.choice(nr_attributes, int(subset_size(nr_attributes)), replace=False)
+	rand_subset = np.random.choice(nr_attributes, int(np.log2(nr_attributes)), replace=False)
 	for attr_idx in rand_subset:
 		col = X[:, attr_idx]
 		unique_vals = np.unique(col) # also sorts
@@ -67,8 +67,9 @@ def subset_selection(X, Y, subset_size=np.log2):
 	best_attr_idx  = np.argmax(attribute_information_gains)
 	best_attr_val  = attribute_values[best_attr_idx]
 	best_info_gain = attribute_information_gains[best_attr_idx]
-	if best_info_gain<0.0000001: print "jkldsajlkdsajlkdjaskldjs"
+	#if best_info_gain<0.0000001: print "weird gain: ", best_attr_idx, best_attr_val, best_info_gain
 	return best_attr_idx, best_attr_val, best_info_gain
+
 
 
 def extremely_random_selection(X, Y):

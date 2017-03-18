@@ -21,7 +21,7 @@ class LeafDecider:
 		return not np.all(X==X[0])
 
 	def get_leaf_class(self, Y): # get most frequent class
-		if len(Y)==0: return None
+		if len(Y)==0: return -1
 		u, indices = np.unique(Y, return_inverse=True)
 		return u[np.argmax(np.bincount(indices))]
 

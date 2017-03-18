@@ -67,7 +67,7 @@ def subset_selection(X, Y, subset_size=np.log2):
 	best_attr_idx  = np.argmax(attribute_information_gains)
 	best_attr_val  = attribute_values[best_attr_idx]
 	best_info_gain = attribute_information_gains[best_attr_idx]
-	if best_info_gain<0.0000001: print "jkldsajlkdsajlkdjaskldjs"
+	#if best_info_gain<0.0000001: print "weird gain: ", best_attr_idx, best_attr_val, best_info_gain
 	return best_attr_idx, best_attr_val, best_info_gain
 
 

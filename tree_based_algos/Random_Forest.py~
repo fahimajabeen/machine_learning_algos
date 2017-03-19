@@ -105,7 +105,7 @@ def test_RF_3():
 	from sklearn.datasets import load_iris
 	iris = load_iris()
 	X, Y = iris["data"], iris["target"]
-	clf = RandomForest(nr_trees=4, maximum_depth=6, min_examples_per_leaf=1)
+	clf = RandomForest(nr_trees=4, maximum_depth=4, min_examples_per_leaf=1)
 	clf.fit(X,Y)
 	counter = 0
 	for i in range(len(X)):

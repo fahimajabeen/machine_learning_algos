@@ -35,3 +35,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# The testing folder for random shiz #
+######################################
+trying_things/*

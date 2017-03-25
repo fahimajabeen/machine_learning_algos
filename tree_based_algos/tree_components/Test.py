@@ -38,7 +38,7 @@ def Test_CS_4():
 	X[7,4] = 10
 	Y = np.arange(n, dtype=np.int32)
 	attr_idx = 4
-	split_val = 15.0
+	split_val = 15
 	
 	xl,xr,yl,yr = cs.left_right_child_data(X, Y, attr_idx, split_val)
 	print xl
@@ -48,7 +48,7 @@ def Test_CS_4():
 
 def Test_CS_5():
 	print "Test CS 5"
-	n, m = 1000,2000
+	n, m = 1000,4000
 	X = np.arange(n*m, dtype=float).reshape(n,m)
 	X[7,4] = 10
 	X = X%(n-1)

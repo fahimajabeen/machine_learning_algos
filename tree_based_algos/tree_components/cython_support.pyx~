@@ -50,13 +50,27 @@ def left_right_child_data(np.ndarray[double, ndim=2, mode="c"] X not None, np.nd
 	# index_array so that: index_array[:split_idx] indices with X_column[index_array[:split_idx] <= splitVal
 	cdef np.ndarray[int, ndim=1, mode="c"] idx_array = np.empty(nr_rows, dtype=np.int32)
 	split_idx = c_smaller_greater(&X_column[0], &idx_array[0], nr_rows, splitVal)
-	
-	
-	# create X's children
+
+	# create X's children's buffers
 	cdef np.ndarray[double, ndim=2, mode="c"] X_left   = np.empty(shape=(split_idx,nr_cols), dtype=np.double)
 	cdef np.ndarray[double, ndim=2, mode="c"] X_right  = np.empty(shape=((nr_rows-split_idx),nr_cols), dtype=np.double)
 	cdef np.ndarray[int, ndim=1, mode="c"]   Y_left   = np.empty(split_idx, dtype=np.int32)
 	cdef np.ndarray[int, ndim=1, mode="c"]   Y_right  = np.empty((nr_rows-split_idx), dtype=np.int32)
+
+	# catch the case that the split doesn't actually change anything because
+	# the function c_create_X_chrildren throws Out of bounds on buffer access (axis 0) 
+	# when one of the X_* or Y_* arrays have no memory space
+	if split_idx==0:
+		X_right = X.copy() # TODO can I simply pass on X instead?
+		Y_right = Y.copy()
+		return X_left, X_right, Y_left, Y_right
+	if split_idx==nr_rows-1:
+		X_left = X.copy() # TODO can I simply pass on X instead?
+		Y_left = Y.copy()
+		return X_left, X_right, Y_left, Y_right
+		
+
+	# create X's children
 	c_create_X_children(&X[0,0], &Y[0], &X_left[0,0], &X_right[0,0], &Y_left[0], &Y_right[0], &idx_array[0], split_idx, nr_rows, nr_cols)
 	
 	return X_left, X_right, Y_left, Y_right

@@ -13,7 +13,6 @@ class DecisionTree:
 		self.n_attr = 0	# nr of attributes
 		self.ld		= LeafDecider(maximum_depth=maximum_depth, min_examples_per_leaf=min_examples_per_leaf)
 		self.attrs	= AttributeSelector("standard decision tree").get_attribute_selector()
-		#self.attrs	= AttributeSelector("subset decision").get_attribute_selector()
 
 	def fit(self, X=np.zeros((0,0)), Y=np.zeros(0)):
 		# assertions should check whether the tree can be built

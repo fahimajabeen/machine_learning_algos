@@ -18,7 +18,7 @@ class DecisionTree:
 		# assertions should check whether the tree can be built
 		# assertions concerning X
 		assert type(X) is np.ndarray,	"attribute values X is not ndarray"
-		assert len(X.shape)==2, 		"attribute values X has more that two dimensions"
+		assert len(X.shape)==2, 		"attribute values X doesn't have two dimensions"
 		assert X.shape[0]>0,			"attribute values X has no examples"
 		assert X.shape[1]>0,			"attribute values X has no attributes"
 		# assertions concerning Y

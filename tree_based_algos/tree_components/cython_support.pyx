@@ -1,95 +1,81 @@
+"""
+cython_support.pyx
+
+this file covers two things:
+	1) Some cython functions meant to speed up python a bit
+	2) It provides an interface to a C-file which allows very fast programming
+
+"""
+import cython
+
+# import both numpy and the Cython declarations for numpy
 import numpy as np
 cimport numpy as np
-import cython
-cimport cython
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cpdef long[:] deepcopy(long[:] in_a):
-	cdef long len_out = len(in_a)
-	cdef long i
-	cdef long[:] out_a = np.empty(len_out, dtype=long)
-	for i in range(len_out):
-		out_a[i] = in_a[i]
-	return np.asarray(out_a)
+# declare the interface to the C code
+cdef extern int c_smaller_greater(double* X, int* idx, int n, double splitVal)
+cdef extern void c_copy_column(double* X, double* X_column, int nr_rows, int nr_cols, int col_idx)
+cdef extern void c_create_X_children(double* X, int* Y, double* X_left, double* X_right, int* Y_left, int* Y_right, int* idx_array, int split_idx, int nr_rows, int nr_cols)
+
+def smaller_greater(np.ndarray[double, ndim=1, mode="c"] X not None, np.ndarray[int, ndim=1, mode="c"] idx not None, double splitVal):
+	cdef int n, split_idx
+	n = int(len(X))
+	split_idx = c_smaller_greater(&X[0], &idx[0], n, splitVal)
+	return split_idx
+
+
+def copy_column(np.ndarray[double, ndim=2, mode="c"] X not None, np.ndarray[double, ndim=1, mode="c"] X_column, long col_idx):
+	cdef int nr_rows, nr_cols
+	nr_rows, nr_cols = X.shape[0], X.shape[1]
+	c_copy_column(&X[0,0], &X_column[0], nr_rows, nr_cols, int(col_idx))
+	return
+
+def copy_column2(np.ndarray[double, ndim=2, mode="c"] X not None, long col_idx):
+	cdef int nr_rows, nr_cols
+	nr_rows, nr_cols = X.shape[0], X.shape[1]
+	cdef np.ndarray[double, ndim=1, mode="c"] X_column = np.empty(nr_rows, dtype=np.double)
+	c_copy_column(&X[0,0], &X_column[0], nr_rows, nr_cols, int(col_idx))
+	return X_column
+
+
+def left_right_child_data(np.ndarray[double, ndim=2, mode="c"] X not None, np.ndarray[int, ndim=1, mode="c"] Y not None, int attr_idx, double splitVal):
+	cdef int nr_rows, nr_cols, split_idx
+	nr_rows, nr_cols = X.shape[0], X.shape[1]
+	
+	# cython version of X_column = X[:,attr_idx]
+	cdef np.ndarray[double, ndim=1, mode="c"] X_column = np.empty(nr_rows, dtype=np.double)
+	c_copy_column(&X[0,0], &X_column[0], nr_rows, nr_cols, attr_idx)
+
+	# index_array so that: index_array[:split_idx] indices with X_column[index_array[:split_idx] <= splitVal
+	cdef np.ndarray[int, ndim=1, mode="c"] idx_array = np.empty(nr_rows, dtype=np.int32)
+	split_idx = c_smaller_greater(&X_column[0], &idx_array[0], nr_rows, splitVal)
+	
+	
+	# create X's children
+	cdef np.ndarray[double, ndim=2, mode="c"] X_left   = np.empty(shape=(split_idx,nr_cols), dtype=np.double)
+	cdef np.ndarray[double, ndim=2, mode="c"] X_right  = np.empty(shape=((nr_rows-split_idx),nr_cols), dtype=np.double)
+	cdef np.ndarray[int, ndim=1, mode="c"]   Y_left   = np.empty(split_idx, dtype=np.int32)
+	cdef np.ndarray[int, ndim=1, mode="c"]   Y_right  = np.empty((nr_rows-split_idx), dtype=np.int32)
+
+	# TODO - this throws Out of bounds on buffer access (axis 0) when arrays are of length ZERO
+	c_create_X_children(&X[0,0], &Y[0], &X_left[0,0], &X_right[0,0], &Y_left[0], &Y_right[0], &idx_array[0], split_idx, nr_rows, nr_cols)
+	
+	return X_left, X_right, Y_left, Y_right
 	
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cpdef quicksort(long [:] a):
-	cdef long n = long(len(a)-1)
-	quicksort_call(a, 0, n)
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef void quicksort_call(long [:] a, long lo, long hi):
-	cdef long p
-	if lo<hi:
-		p = partition(a, lo, hi)
-		quicksort_call(a, lo, p-1)
-		quicksort_call(a, p+1, hi)
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef long partition(long [:] a, long lo, long hi):
-	cdef long pivot = a[hi]
-	cdef long i = lo - 1
-	cdef int j
-	for j in range(lo, hi):
-		if a[j] <= pivot:
-			i += 1
-			a[i], a[j] = a[j], a[i]
-	a[i+1], a[hi] = a[hi], a[i+1]
-	return i+1
 
 
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
-cpdef unique(long [:] a):
-	#returns all unique elements in a
-	#returns the indices for a mapping to the unique element array 	
-	cdef long[:] b = deepcopy(a)
-	quicksort(b)
-	unique = [b[0]]
-	cdef int i
-	cdef long last = b[0]
-	cdef int n = len(a)
-	for i in range(n):
-		if last != b[i]:
-			last = b[i]
-			unique.append(last)
-	unique = np.array(unique)
-	return unique
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cpdef split_by_attribute(double[:] X_attr, long[:] Y, double split_val):
-	cdef int len_smaller = 0
-	cdef int i, j, k = 0
-	cdef int Y_len = len(Y)
-	for i in range(Y_len):
-		if X_attr[i] <= split_val:
-			len_smaller += 1
-	cdef int len_larger  = Y_len - len_smaller
-	
-	cdef np.ndarray[long, ndim=1, mode="c"] Y_smaller = np.empty(len_smaller, dtype=np.int64)
-	cdef np.ndarray[long, ndim=1, mode="c"] Y_larger  = np.empty(len_larger,  dtype=np.int64)
 
-	cdef long* Y_sma = &Y_smaller[0]
-	cdef long* Y_lar = &Y_larger[0]
-	
-	for i in range(Y_len):
-		if X_attr[i] <= split_val:
-			Y_sma[j] = Y[i]
-			j += 1
-		else:
-			Y_lar[k] = Y[i]
-			k += 1
 
-	return Y_smaller, Y_larger, len_smaller, len_larger
+
+
+
+
 
 
 

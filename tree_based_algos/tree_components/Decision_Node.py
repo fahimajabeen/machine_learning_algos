@@ -1,6 +1,7 @@
 import cython_support as cs
 
 import numpy as np
+import time
 
 class DecisionNode:
 
@@ -55,10 +56,10 @@ class FastDecisionNode:
 		attrs = parent_tree.attrs
 		self.attribute, self.separation_value, self.information_gain = attrs(X, Y)
 		
-		X_left, X_right, Y_left, Y_right = csleft_right_child_data(X, Y, attribute, separation_value)
+		X_left, X_right, Y_left, Y_right = cs.left_right_child_data(X, Y, self.attribute, self.separation_value)
 
-		self.lc = DecisionNode(parent_tree, X[left_idx],  Y[left_idx],  depth+1)
-		self.rc = DecisionNode(parent_tree, X[right_idx], Y[right_idx], depth+1)
+		self.lc = DecisionNode(parent_tree, X_left,  Y_left,  depth+1)
+		self.rc = DecisionNode(parent_tree, X_right, Y_right, depth+1)
 
 
 	def classify(self,example):
